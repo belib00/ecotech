@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.7828445123514966aeb1cd8b4ca1f6d3",
+  "appName": "projetoecotech",
+  "webDir": "dist",
+  "server": {
+    "url": "https://78284451-2351-4966-aeb1-cd8b4ca1f6d3.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}
