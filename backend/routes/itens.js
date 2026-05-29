@@ -1,31 +1,22 @@
-import express from 'express';
-import db from '../models/db.js';
+import express from "express";
+
+import {
+  listarItens,
+  buscarItemPorId,
+  criarItem,
+  atualizarItem,
+  deletarItem,
+} from "../controllers/itensController.js";
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-    db.all('SELECT * FROM itens', [], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json(rows);
-    });
-});
+router.get("/", listarItens);
+router.get("/:id", buscarItemPorId);
 
-router.post('/', (req, res) => {
-    const { nome, categoria } = req.body;
+router.post("/", criarItem);
 
-    db.run(
-        'INSERT INTO itens (nome, categoria) VALUES (?, ?)',
-        [nome, categoria],
-        function (err) {
-            if (err) return res.status(500).json({ erro: err.message });
+router.put("/:id", atualizarItem);
 
-            res.json({
-                id: this.lastID,
-                nome,
-                categoria
-            });
-        }
-    );
-});
+router.delete("/:id", deletarItem);
 
 export default router;
