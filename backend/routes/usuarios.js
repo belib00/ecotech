@@ -1,31 +1,22 @@
-import express from 'express';
-import db from '../models/db.js';
+import express from "express";
+
+import {
+  listarUsuarios,
+  buscarUsuarioPorId,
+  criarUsuario,
+  atualizarUsuario,
+  deletarUsuario,
+} from "../controllers/usuariosController.js";
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-    db.all('SELECT * FROM usuarios', [], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json(rows);
-    });
-});
+router.get("/", listarUsuarios);
+router.get("/:id", buscarUsuarioPorId);
 
-router.post('/', (req, res) => {
-    const { nome, email } = req.body;
+router.post("/", criarUsuario);
 
-    db.run(
-        'INSERT INTO usuarios (nome, email) VALUES (?, ?)',
-        [nome, email],
-        function (err) {
-            if (err) return res.status(500).json({ erro: err.message });
+router.put("/:id", atualizarUsuario);
 
-            res.json({
-                id: this.lastID,
-                nome,
-                email
-            });
-        }
-    );
-});
+router.delete("/:id", deletarUsuario);
 
 export default router;
