@@ -14,9 +14,6 @@ const Sobre = () => {
        eficiente, promovendo a conscientização ambiental e a construção de um futuro mais sustentável para todos.
         </p>
         <p>Junte-se a nós e contribua para um planeta mais limpo e eficiente!</p>
-        </p> Isabela Brandão </p>
-        </p> Maria Luiza Tavares </p>
-        </p> Pedro Lukas G. Pereira </p>
       </div>
     </section>
   );
