@@ -25,6 +25,14 @@ CREATE TABLE itens (
   pontos_aceitos TEXT
  ); 
 
+CREATE TABLE usuarios (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nome TEXT NOT NULL, 
+  email TEXT NOT NULL,
+  telefone TEXT,
+  cidade TEXT
+ ); 
+
 CREATE TABLE descartes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   usuario_id INTERGER,
