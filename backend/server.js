@@ -42,6 +42,10 @@ CREATE TABLE IF NOT EXISTS itens (
 app.use("/usuarios", usuariosRoutes);
 app.use("/pontos", pontosRoutes);
 app.use("/itens", itensRoutes);
+app.use("/feedbacks", feedbacksRoutes);
+app.use("/descartes", descartesRoutes);
+app.use("/contactMessages", contactMessagesRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Servidor funcionando!");
