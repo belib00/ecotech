@@ -5,9 +5,9 @@ import db from "./models/db.js";
 import usuariosRoutes from "./routes/usuarios.js";
 import pontosRoutes from "./routes/pontos.js";
 import itensRoutes from "./routes/itens.js";
-import itensRoutes from "./routes/feedbacks.js";
-import itensRoutes from "./routes/descartes.js";
-import itensRoutes from "./routes/contactMessages.js";
+import feedbacksRoutes from "./routes/feedbacks.js";
+import descartesRoutes from "./routes/descartes.js";
+import mensagensRoutes from "./routes/contactMessages.js";
 
 const app = express();
 
@@ -44,7 +44,7 @@ app.use("/pontos", pontosRoutes);
 app.use("/itens", itensRoutes);
 app.use("/feedbacks", feedbacksRoutes);
 app.use("/descartes", descartesRoutes);
-app.use("/contactMessages", contactMessagesRoutes);
+app.use("/mensagens", contactMessagesRoutes);
 
 
 app.get("/", (req, res) => {
