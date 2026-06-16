@@ -5,6 +5,9 @@ import db from "./models/db.js";
 import usuariosRoutes from "./routes/usuarios.js";
 import pontosRoutes from "./routes/pontos.js";
 import itensRoutes from "./routes/itens.js";
+import itensRoutes from "./routes/feedbacks.js";
+import itensRoutes from "./routes/descartes.js";
+import itensRoutes from "./routes/contactMessages.js";
 
 const app = express();
 
