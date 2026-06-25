@@ -1,9 +1,9 @@
-import feedbacksService from "../services/feedbacksService.js";
+import produtosService from "../services/produtosService.js";
 
 async function listarTodos(req, res) {
   try {
-    const feedbacks = await feedbacksService.listarTodos();
-    res.json(feedbacks);
+    const produtos = await produtosService.listarTodos();
+    res.json(produtos);
   } catch (erro) {
     res.status(500).json({ erro: erro.message });
   }
@@ -11,8 +11,8 @@ async function listarTodos(req, res) {
 
 async function criar(req, res) {
   try {
-    const feedback = await feedbacksService.criar(req.body);
-    res.status(201).json(feedback);
+    const produto = await produtosService.criar(req.body);
+    res.status(201).json(produto);
   } catch (erro) {
     res.status(400).json({ erro: erro.message });
   }

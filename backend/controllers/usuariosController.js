@@ -1,106 +1,24 @@
-import db from "../models/db.js";
+import usuariosService from "../services/usuariosService.js";
 
-export const listarUsuarios = (req, res) => {
-  db.all("SELECT * FROM usuarios", [], (err, rows) => {
-    if (err) {
-      return res.status(500).json({
-        erro: err.message,
-      });
-    }
-
-    res.json(rows);
-  });
-};
-
-export const buscarUsuarioPorId = (req, res) => {
-  const { id } = req.params;
-
-  db.get(
-    "SELECT * FROM usuarios WHERE id = ?",
-    [id],
-    (err, row) => {
-      if (err) {
-        return res.status(500).json({
-          erro: err.message,
-        });
-      }
-
-      if (!row) {
-        return res.status(404).json({
-          mensagem: "Usuário não encontrado",
-        });
-      }
-
-      res.json(row);
-    }
-  );
-};
-
-export const criarUsuario = (req, res) => {
-  const { nome, email } = req.body;
-
-  if (!nome || !email) {
-    return res.status(400).json({
-      mensagem: "Nome e email são obrigatórios",
-    });
+async function listarTodos(req, res) {
+  try {
+    const usuarios = await usuariosService.listarTodos();
+    res.json(usuarios);
+  } catch (erro) {
+    res.status(500).json({ erro: erro.message });
   }
+}
 
-  db.run(
-    "INSERT INTO usuarios (nome, email) VALUES (?, ?)",
-    [nome, email],
-    function (err) {
-      if (err) {
-        return res.status(500).json({
-          erro: err.message,
-        });
-      }
+async function criar(req, res) {
+  try {
+    const usuario = await usuariosService.criar(req.body);
+    res.status(201).json(usuario);
+  } catch (erro) {
+    res.status(400).json({ erro: erro.message });
+  }
+}
 
-      res.status(201).json({
-        id: this.lastID,
-        nome,
-        email,
-      });
-    }
-  );
-};
-
-export const atualizarUsuario = (req, res) => {
-  const { id } = req.params;
-  const { nome, email } = req.body;
-
-  db.run(
-    "UPDATE usuarios SET nome = ?, email = ? WHERE id = ?",
-    [nome, email, id],
-    function (err) {
-      if (err) {
-        return res.status(500).json({
-          erro: err.message,
-        });
-      }
-
-      res.json({
-        mensagem: "Usuário atualizado com sucesso",
-      });
-    }
-  );
-};
-
-export const deletarUsuario = (req, res) => {
-  const { id } = req.params;
-
-  db.run(
-    "DELETE FROM usuarios WHERE id = ?",
-    [id],
-    function (err) {
-      if (err) {
-        return res.status(500).json({
-          erro: err.message,
-        });
-      }
-
-      res.json({
-        mensagem: "Usuário removido com sucesso",
-      });
-    }
-  );
+export default {
+  listarTodos,
+  criar,
 };

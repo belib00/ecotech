@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
-import db from "./models/db.js";
+import "./database/initDatabase.js";
 
 import usuariosRoutes from "./routes/usuarios.js";
+import produtosRoutes from "./routes/produtos.js";
 import pontosRoutes from "./routes/pontos.js";
-import itensRoutes from "./routes/itens.js";
-import feedbacksRoutes from "./routes/feedbacks.js";
 import descartesRoutes from "./routes/descartes.js";
+import feedbacksRoutes from "./routes/feedbacks.js";
 import mensagensRoutes from "./routes/contactMessages.js";
 
 const app = express();
@@ -14,41 +14,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-db.run(`
-CREATE TABLE IF NOT EXISTS usuarios (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nome TEXT NOT NULL,
-  email TEXT NOT NULL
-)
-`);
-
-db.run(`
-CREATE TABLE IF NOT EXISTS pontos (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nome TEXT NOT NULL,
-  endereco TEXT NOT NULL,
-  tipo TEXT NOT NULL
-)
-`);
-
-db.run(`
-CREATE TABLE IF NOT EXISTS itens (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nome TEXT NOT NULL,
-  categoria TEXT NOT NULL
-)
-`);
-
 app.use("/usuarios", usuariosRoutes);
+app.use("/produtos", produtosRoutes);
 app.use("/pontos", pontosRoutes);
-app.use("/itens", itensRoutes);
-app.use("/feedbacks", feedbacksRoutes);
 app.use("/descartes", descartesRoutes);
-app.use("/mensagens", contactMessagesRoutes);
-
+app.use("/feedbacks", feedbacksRoutes);
+app.use("/mensagens", mensagensRoutes);
 
 app.get("/", (req, res) => {
-  res.send("Servidor funcionando!");
+  res.json({ mensagem: "API EcoTech funcionando!" });
 });
 
 app.listen(3000, () => {
