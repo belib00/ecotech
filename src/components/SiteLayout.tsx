@@ -96,7 +96,7 @@ const SiteLayout = () => {
 
       <footer className="bg-primary-dark text-primary-foreground mt-16">
         <div className="container py-10 text-center">
-          <p className="text-sm opacity-90">&copy; 2025 EcoTech. Todos os direitos reservados.</p>
+          <p className="text-sm opacity-90">&copy;2026 EcoTech. Todos os direitos reservados.</p>
           <div className="my-5 flex justify-center gap-5">
             <a href="#" aria-label="Facebook" className="transition-transform hover:scale-110 hover:text-primary-light">
               <Facebook className="h-5 w-5" />

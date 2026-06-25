@@ -1,7 +1,7 @@
 import db from "../models/db.js";
 
-export const listarUsuarios = (req, res) => {
-  db.all("SELECT * FROM usuarios", [], (err, rows) => {
+export const listarItens = (req, res) => {
+  db.all("SELECT * FROM itens", [], (err, rows) => {
     if (err) {
       return res.status(500).json({
         erro: err.message,
@@ -12,11 +12,11 @@ export const listarUsuarios = (req, res) => {
   });
 };
 
-export const buscarUsuarioPorId = (req, res) => {
+export const buscarItemPorId = (req, res) => {
   const { id } = req.params;
 
   db.get(
-    "SELECT * FROM usuarios WHERE id = ?",
+    "SELECT * FROM itens WHERE id = ?",
     [id],
     (err, row) => {
       if (err) {
@@ -27,7 +27,7 @@ export const buscarUsuarioPorId = (req, res) => {
 
       if (!row) {
         return res.status(404).json({
-          mensagem: "Usuário não encontrado",
+          mensagem: "Item não encontrado",
         });
       }
 
@@ -36,18 +36,12 @@ export const buscarUsuarioPorId = (req, res) => {
   );
 };
 
-export const criarUsuario = (req, res) => {
-  const { nome, email } = req.body;
-
-  if (!nome || !email) {
-    return res.status(400).json({
-      mensagem: "Nome e email são obrigatórios",
-    });
-  }
+export const criarItem = (req, res) => {
+  const { nome, categoria } = req.body;
 
   db.run(
-    "INSERT INTO usuarios (nome, email) VALUES (?, ?)",
-    [nome, email],
+    "INSERT INTO itens (nome, categoria) VALUES (?, ?)",
+    [nome, categoria],
     function (err) {
       if (err) {
         return res.status(500).json({
@@ -58,19 +52,19 @@ export const criarUsuario = (req, res) => {
       res.status(201).json({
         id: this.lastID,
         nome,
-        email,
+        categoria,
       });
     }
   );
 };
 
-export const atualizarUsuario = (req, res) => {
+export const atualizarItem = (req, res) => {
   const { id } = req.params;
-  const { nome, email } = req.body;
+  const { nome, categoria } = req.body;
 
   db.run(
-    "UPDATE usuarios SET nome = ?, email = ? WHERE id = ?",
-    [nome, email, id],
+    "UPDATE itens SET nome = ?, categoria = ? WHERE id = ?",
+    [nome, categoria, id],
     function (err) {
       if (err) {
         return res.status(500).json({
@@ -79,17 +73,17 @@ export const atualizarUsuario = (req, res) => {
       }
 
       res.json({
-        mensagem: "Usuário atualizado com sucesso",
+        mensagem: "Item atualizado com sucesso",
       });
     }
   );
 };
 
-export const deletarUsuario = (req, res) => {
+export const deletarItem = (req, res) => {
   const { id } = req.params;
 
   db.run(
-    "DELETE FROM usuarios WHERE id = ?",
+    "DELETE FROM itens WHERE id = ?",
     [id],
     function (err) {
       if (err) {
@@ -99,7 +93,7 @@ export const deletarUsuario = (req, res) => {
       }
 
       res.json({
-        mensagem: "Usuário removido com sucesso",
+        mensagem: "Item removido com sucesso",
       });
     }
   );
