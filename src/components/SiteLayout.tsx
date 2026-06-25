@@ -6,7 +6,7 @@ import logo from "@/assets/ecotech-logo.png";
 
 
 const navItems = [
-  { to: "/", label: "Início", end: true },
+  { to: "/Inicio", label: "Início", end: true },
   { to: "/sobre", label: "Sobre" },
   { to: "/produtos", label: "Produtos" },
   { to: "/contato", label: "Contato" },
