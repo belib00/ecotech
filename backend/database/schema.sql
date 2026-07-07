@@ -64,10 +64,9 @@ CREATE TABLE IF NOT EXISTS descartes (
 CREATE TABLE IF NOT EXISTS feedbacks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     usuario_id INTEGER,
-    mensagem TEXT,
-    nota INTEGER,
     titulo TEXT,
-    nota INTEGER CHECK(nota >=1 AND nota <=5)
+    mensagem TEXT,
+    nota INTEGER CHECK(nota >= 1 AND nota <= 5),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY(usuario_id) REFERENCES usuarios(id)
