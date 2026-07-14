@@ -1,164 +1,194 @@
 import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { MapPin, Navigation, Phone, Clock } from "lucide-react";
 import pinIcon from "@/assets/map-pin.png";
+import type { CollectionPoint } from "@/data/collectionPoints";
+import { directionsUrl, formatDistance, haversineKm, type LatLng } from "@/lib/geo";
+import { getOpenStatus } from "@/lib/opening-hours";
 
-const customIcon = L.icon({
+const baseIcon = L.icon({
   iconUrl: pinIcon,
   iconSize: [48, 48],
   iconAnchor: [24, 46],
   popupAnchor: [0, -42],
 });
 
-export type CollectionPoint = {
-  id: string;
-  name: string;
-  description?: string;
-  address?: string;
-  phone?: string;
-  hours?: string;
-  notes?: string;
-  lat: number;
-  lng: number;
-};
+/** Versão maior do pino, usada quando o ponto está selecionado ou com o mouse em cima. */
+const activeIcon = L.icon({
+  iconUrl: pinIcon,
+  iconSize: [62, 62],
+  iconAnchor: [31, 59],
+  popupAnchor: [0, -54],
+});
 
-const points: CollectionPoint[] = [
-  {
-    id: "ecopila",
-    name: "EcoPila",
-    address: "Rua Capitão Cruz, Centro - Montenegro/RS",
-    hours: "Quintas-feiras, 07:00 às 12:00",
-    notes:
-      "Ponto de troca aceita alguns recicláveis. Confirme se o item gera crédito na moeda social no momento da entrega.",
-    lat: -29.6810776,
-    lng: -51.4624438,
-  },
-  {
-    id: "telemonte",
-    name: "Telemonte Coleta e Transporte",
-    description: "Ponto oficial fixo (parceria com a Prefeitura).",
-    address: "Estrada Maurício Cardoso (RS-287), nº 8351 - Bairro Estação/Senai",
-    phone: "(51) 3649-3200",
-    lat: -29.6938,
-    lng: -51.4338,
-  },
-  {
-    id: "montepel",
-    name: "Montepel",
-    description: "Recebe diversos materiais para reciclagem, incluindo eletrônicos e pilhas.",
-    address: "Rua Hortêncio R. Machado, 40 - Bairro Municipal",
-    lat: -29.6852,
-    lng: -51.4598,
-  },
-  {
-    id: "smartcom",
-    name: "SmartCom Assistência Técnica",
-    description: "Aceita descarte de baterias e eletrônicos.",
-    address: "Rua Dr. Bruno de Andrade, 1340 - Timbaúva",
-    lat: -29.6755,
-    lng: -51.4502,
-  },
-  {
-    id: "praca-rui-barbosa",
-    name: "Dia do Descarte Correto - Praça Rui Barbosa",
-    description:
-      "Evento periódico da Secretaria Municipal de Meio Ambiente (SMMA). Recebimento gratuito de eletrônicos, óleo de cozinha e lâmpadas.",
-    address: "Praça Rui Barbosa - Centro, Montenegro/RS",
-    lat: -29.6878,
-    lng: -51.4612,
-  },
-  {
-    id: "estacao-cultura",
-    name: "Dia do Descarte Correto - Estação da Cultura",
-    description:
-      "Evento periódico da SMMA. Recebimento gratuito de eletrônicos, óleo de cozinha e lâmpadas.",
-    address: "Rua Osvaldo Aranha - Montenegro/RS",
-    lat: -29.6864,
-    lng: -51.4639,
-  },
-];
+const DEFAULT_CENTER: [number, number] = [-29.6852, -51.4598];
 
-type Props = {
-  selectedType?: string | null;
-  zoom?: number;
-};
-
-const FlyTo = ({ lat, lng, zoom, trigger }: { lat: number; lng: number; zoom: number; trigger: unknown }) => {
+/** Ajusta o enquadramento do mapa para caber todos os pontos visíveis (e o usuário, se localizado). */
+const FitToPoints = ({
+  points,
+  userLocation,
+}: {
+  points: CollectionPoint[];
+  userLocation: LatLng | null;
+}) => {
   const map = useMap();
+
   useEffect(() => {
-    map.flyTo([lat, lng], zoom, { duration: 0.8 });
-  }, [trigger, lat, lng, zoom, map]);
+    if (points.length === 0) return;
+
+    const coords = points.map((p) => [p.lat, p.lng] as [number, number]);
+    if (userLocation) coords.push([userLocation.lat, userLocation.lng]);
+
+    if (coords.length === 1) {
+      map.flyTo(coords[0], 16, { duration: 0.8 });
+      return;
+    }
+    map.fitBounds(L.latLngBounds(coords), { padding: [48, 48], maxZoom: 15 });
+  }, [points, userLocation, map]);
+
   return null;
 };
 
-const EcoMap = ({ selectedType = null, zoom = 14 }: Props) => {
-  const center: [number, number] = [-29.6852, -51.4598];
-  const mainRef = useRef<L.Marker>(null);
+/** Voa até o ponto selecionado na lista. */
+const FlyToPoint = ({ point }: { point: CollectionPoint | null }) => {
+  const map = useMap();
 
   useEffect(() => {
-    if (selectedType && mainRef.current) {
-      mainRef.current.openPopup();
+    if (point) {
+      map.flyTo([point.lat, point.lng], 16, { duration: 0.8 });
     }
-  }, [selectedType]);
+  }, [point, map]);
+
+  return null;
+};
+
+type Props = {
+  points: CollectionPoint[];
+  selectedType?: string | null;
+  selectedPointId?: string | null;
+  hoveredPointId?: string | null;
+  userLocation?: LatLng | null;
+  onSelectPoint?: (id: string) => void;
+  zoom?: number;
+};
+
+const EcoMap = ({
+  points,
+  selectedType = null,
+  selectedPointId = null,
+  hoveredPointId = null,
+  userLocation = null,
+  onSelectPoint,
+  zoom = 14,
+}: Props) => {
+  const markerRefs = useRef(new Map<string, L.Marker>());
+  const selectedPoint = selectedPointId
+    ? points.find((p) => p.id === selectedPointId) ?? null
+    : null;
+
+  // Abre o popup do ponto escolhido na lista
+  useEffect(() => {
+    if (selectedPointId) {
+      markerRefs.current.get(selectedPointId)?.openPopup();
+    }
+  }, [selectedPointId]);
 
   return (
-    <MapContainer center={center} zoom={zoom} scrollWheelZoom={false} className="h-full w-full">
+    <MapContainer center={DEFAULT_CENTER} zoom={zoom} scrollWheelZoom={false} className="h-full w-full">
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {points.map((p) => (
-        <Marker
-          key={p.id}
-          ref={p.id === "ecopila" ? mainRef : undefined}
-          position={[p.lat, p.lng]}
-          icon={customIcon}
+
+      {points.map((p) => {
+        const isActive = p.id === selectedPointId || p.id === hoveredPointId;
+        const status = getOpenStatus(p.weeklyHours);
+        const distanceKm = userLocation ? haversineKm(userLocation, p) : null;
+
+        return (
+          <Marker
+            key={p.id}
+            ref={(marker) => {
+              if (marker) markerRefs.current.set(p.id, marker);
+              else markerRefs.current.delete(p.id);
+            }}
+            position={[p.lat, p.lng]}
+            icon={isActive ? activeIcon : baseIcon}
+            zIndexOffset={isActive ? 1000 : 0}
+            eventHandlers={onSelectPoint ? { click: () => onSelectPoint(p.id) } : undefined}
+          >
+            <Popup>
+              <div className="min-w-[220px] max-w-[260px]">
+                <p className="text-sm font-bold text-primary-dark">{p.name}</p>
+
+                {status ? (
+                  <p className={`text-xs font-semibold ${status.isOpen ? "text-primary" : "text-muted-foreground"}`}>
+                    {status.label}
+                  </p>
+                ) : null}
+
+                {p.description ? <p className="text-xs">{p.description}</p> : null}
+
+                {p.address ? (
+                  <p className="flex items-start gap-1 text-xs">
+                    <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-primary" aria-hidden="true" />
+                    <span>{p.address}</span>
+                  </p>
+                ) : null}
+
+                {p.phone ? (
+                  <p className="flex items-center gap-1 text-xs">
+                    <Phone className="h-3 w-3 shrink-0 text-primary" aria-hidden="true" />
+                    <span>{p.phone}</span>
+                  </p>
+                ) : null}
+
+                {p.hours ? (
+                  <p className="flex items-center gap-1 text-xs">
+                    <Clock className="h-3 w-3 shrink-0 text-primary" aria-hidden="true" />
+                    <span>{p.hours}</span>
+                  </p>
+                ) : null}
+
+                {p.notes ? <p className="text-xs italic">{p.notes}</p> : null}
+
+                {selectedType && p.accepts.includes(selectedType) ? (
+                  <p className="text-xs font-medium text-primary-dark">Recebe: {selectedType}</p>
+                ) : null}
+
+                {distanceKm !== null ? (
+                  <p className="text-xs font-medium">a {formatDistance(distanceKm)} de você</p>
+                ) : null}
+
+                <a
+                  href={directionsUrl(p)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="map-directions-link mt-2 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold transition-colors duration-300 hover:bg-highlight"
+                >
+                  <Navigation className="h-3.5 w-3.5" aria-hidden="true" />
+                  Como chegar
+                </a>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
+
+      {userLocation ? (
+        <CircleMarker
+          center={[userLocation.lat, userLocation.lng]}
+          radius={9}
+          pathOptions={{ color: "#ffffff", weight: 3, fillColor: "#2563eb", fillOpacity: 1 }}
         >
-          <Popup>
-            <strong>{p.name}</strong>
-            {p.description ? (
-              <>
-                <br />
-                {p.description}
-              </>
-            ) : null}
-            {p.address ? (
-              <>
-                <br />
-                <span>{p.address}</span>
-              </>
-            ) : null}
-            {p.phone ? (
-              <>
-                <br />
-                Telefone: {p.phone}
-              </>
-            ) : null}
-            {p.hours ? (
-              <>
-                <br />
-                Horário: {p.hours}
-              </>
-            ) : null}
-            {p.notes ? (
-              <>
-                <br />
-                <em>{p.notes}</em>
-              </>
-            ) : null}
-            {p.id === "ecopila" && selectedType ? (
-              <>
-                <br />
-                <em>Recebe: {selectedType}</em>
-              </>
-            ) : null}
-          </Popup>
-        </Marker>
-      ))}
-      {selectedType ? (
-        <FlyTo lat={-29.6810776} lng={-51.4624438} zoom={16} trigger={selectedType} />
+          <Popup>Você está aqui</Popup>
+        </CircleMarker>
       ) : null}
+
+      <FitToPoints points={points} userLocation={userLocation} />
+      <FlyToPoint point={selectedPoint} />
     </MapContainer>
   );
 };

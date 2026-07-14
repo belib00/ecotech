@@ -18,6 +18,10 @@
     --primary-dark: 145 38% 17%;
     --primary-light: 152 76% 80%;
 
+    /* Cor de destaque para interações (hover): verde-limão elétrico */
+    --highlight: 84 92% 48%;
+    --highlight-foreground: 150 45% 12%;
+
     --secondary: 152 60% 92%;
     --secondary-foreground: 145 38% 17%;
 
@@ -40,6 +44,7 @@
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(152 60% 98%));
     --shadow-soft: 0 6px 16px -4px hsl(152 40% 20% / 0.12);
     --shadow-elevated: 0 14px 30px -10px hsl(152 40% 20% / 0.18);
+    --shadow-glow: 0 0 0 3px hsl(var(--highlight) / 0.25), 0 10px 28px -8px hsl(var(--highlight) / 0.45);
     --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
@@ -63,6 +68,8 @@
     --primary-foreground: 145 38% 10%;
     --primary-dark: 145 38% 10%;
     --primary-light: 152 76% 70%;
+    --highlight: 84 90% 55%;
+    --highlight-foreground: 150 45% 10%;
     --secondary: 145 30% 18%;
     --secondary-foreground: 152 30% 95%;
     --muted: 145 30% 18%;
@@ -82,12 +89,28 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
 
   h1, h2, h3 {
-    @apply font-bold tracking-tight;
+    @apply font-display font-bold tracking-tight;
+  }
+
+  /* Seleção de texto com a cor de destaque */
+  ::selection {
+    background-color: hsl(var(--highlight) / 0.35);
+    color: hsl(var(--foreground));
+  }
+
+  /* Anel de foco visível e consistente para navegação por teclado */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 }
 
@@ -95,6 +118,28 @@
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-12px); }
+  }
+
+  /* Brilho verde-limão ao passar o mouse (usado em ícones/logo) */
+  .glow-hover {
+    transition: filter 0.3s ease, transform 0.3s ease;
+  }
+  .glow-hover:hover {
+    filter: drop-shadow(0 0 10px hsl(var(--highlight) / 0.75));
+  }
+}
+
+/* Respeita usuários que preferem menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -104,3 +149,25 @@
 .leaflet-bottom { z-index: 1 !important; }
 .leaflet-control { z-index: 2 !important; }
 .leaflet-popup { z-index: 3 !important; }
+
+/* Popup do mapa com a cara do site */
+.leaflet-container {
+  font-family: "Inter", system-ui, sans-serif;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: var(--shadow-elevated);
+}
+.leaflet-popup-content {
+  margin: 12px 14px;
+}
+.leaflet-popup-content p {
+  margin: 0.3rem 0;
+}
+/* O Leaflet pinta links de azul; o botão "Como chegar" usa as cores do tema */
+.leaflet-container a.map-directions-link {
+  color: hsl(var(--primary-foreground));
+}
+.leaflet-container a.map-directions-link:hover {
+  color: hsl(var(--highlight-foreground));
+}

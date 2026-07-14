@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import SiteLayout from "./components/SiteLayout";
+import { Toaster } from "@/components/ui/sonner";
 
 import Index from "./pages/Index";
 import Produtos from "./pages/Produtos";
@@ -23,6 +24,9 @@ function App() {
 
         <Route path="*" element={<NotFound />} />
       </Routes>
+
+      {/* Exibe as notificações (toasts) do formulário de contato */}
+      <Toaster richColors position="top-center" />
     </BrowserRouter>
   );
 }

@@ -1,10 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Faltam as variáveis de ambiente do Supabase.');
+/**
+ * Combina classes condicionais (clsx) e resolve conflitos
+ * de utilitários Tailwind (tailwind-merge).
+ * Usada pelos componentes de UI (select, toast, tooltip).
+ */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);

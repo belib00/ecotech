@@ -17,7 +17,6 @@ async function criar(req, res) {
     return res.status(400).json({ erro: erro.message });
   }
 }
-//Isa, adicionei a partir daqui o bucarPorID, Atualizar e deletar
 async function buscarPorId(req, res) {
   try {
     const { id } = req.params;
