@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Espelha a policy RLS que existia no Supabase: qualquer pessoa (anônima ou
+    // autenticada) pode criar uma mensagem de contato, respeitando limites de
+    // tamanho. Nenhuma leitura/edição/remoção é permitida pelo cliente.
+    match /contact_messages/{messageId} {
+      allow create: if request.resource.data.name is string
+                    && request.resource.data.name.size() >= 1
+                    && request.resource.data.name.size() <= 100
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() >= 3
+                    && request.resource.data.email.size() <= 200
+                    && request.resource.data.message is string
+                    && request.resource.data.message.size() >= 1
+                    && request.resource.data.message.size() <= 5000;
+      allow read, update, delete: if false;
+    }
+
+    // Um usuário autenticado só pode ler/editar o próprio documento de perfil
+    // (ID do doc == UID do Firebase Auth). Contas só são criadas via backend
+    // (Admin SDK), então não há create/delete pelo cliente.
+    match /usuarios/{uid} {
+      allow read, update: if request.auth != null && request.auth.uid == uid;
+      allow create, delete: if false;
+    }
+
+    // Tudo mais (produtos, pontos_coleta, categorias, descartes, feedbacks) é
+    // acessado hoje só pelo backend via Admin SDK, que ignora estas regras.
+    // Nega acesso direto do cliente por padrão.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

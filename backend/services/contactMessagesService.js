@@ -6,9 +6,9 @@ async function listarTodos() {
 }
 
 async function criar(dados) {
-  const { nome, email, mensagem } = dados;
+  const { name, email, message } = dados;
 
-  if (!nome || !email || !mensagem) {
+  if (!name || !email || !message) {
     throw new Error("Nome, email e mensagem são obrigatórios.");
   }
 
@@ -17,14 +17,14 @@ async function criar(dados) {
 
   // 2. Prepara e envia o e-mail de notificação em segundo plano
   const opcoesEmail = {
-    from: '"EcoTech Fale Conosco" <no-reply@ecotech.com>', 
+    from: '"EcoTech Fale Conosco" <no-reply@ecotech.com>',
     to: "seu-email-de-administrador@gmail.com", // Coloque aqui o e-mail que vai RECEBER os contatos
-    subject: `Nova mensagem de contato de ${nome}`,
+    subject: `Nova mensagem de contato de ${name}`,
     html: `
       <h2>Nova mensagem recebida no EcoTech</h2>
-      <p><strong>Nome:</strong> ${nome}</p>
+      <p><strong>Nome:</strong> ${name}</p>
       <p><strong>E-mail:</strong> ${email}</p>
-      <p><strong>Mensagem:</strong> ${mensagem}</p>
+      <p><strong>Mensagem:</strong> ${message}</p>
     `,
   };
 

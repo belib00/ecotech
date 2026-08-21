@@ -1,42 +1,38 @@
-import db from "../config/database.js";
+import { db } from "../config/firebaseAdmin.js";
 
-function listarTodos() {
-  return new Promise((resolve, reject) => {
-    db.all("SELECT * FROM produtos", [], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+const colecao = db.collection("produtos");
+
+async function listarTodos() {
+  const snapshot = await colecao.get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
-function criar(dados) {
-  return new Promise((resolve, reject) => {
-    const {
-      nome,
-      descricao,
-      categoria_id,
-      estado,
-      preco,
-      imagem,
-      usuario_id,
-    } = dados;
+async function criar(dados) {
+  const {
+    nome,
+    descricao = null,
+    categoria_id = null,
+    estado = null,
+    preco = null,
+    imagem = null,
+    usuario_id = null,
+  } = dados;
 
-    db.run(
-      `INSERT INTO produtos
-      (nome, descricao, categoria_id, estado, preco, imagem, usuario_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [nome, descricao, categoria_id, estado, preco, imagem, usuario_id],
-      function (err) {
-        if (err) reject(err);
-        else {
-          resolve({
-            id: this.lastID,
-            ...dados,
-          });
-        }
-      }
-    );
-  });
+  const produto = {
+    nome,
+    descricao,
+    categoria_id,
+    estado,
+    preco,
+    imagem,
+    usuario_id,
+    disponivel: true,
+    created_at: new Date(),
+    updated_at: new Date(),
+  };
+
+  const ref = await colecao.add(produto);
+  return { id: ref.id, ...produto };
 }
 
 export default {

@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import "./database/initDatabase.js";
 
 import usuariosRoutes from "./routes/usuarios.js";
 import produtosRoutes from "./routes/produtos.js";

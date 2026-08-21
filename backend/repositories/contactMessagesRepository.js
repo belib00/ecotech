@@ -1,36 +1,19 @@
-import db from "../config/database.js";
+import { db } from "../config/firebaseAdmin.js";
 
-function listarTodos() {
-  return new Promise((resolve, reject) => {
-    db.all("SELECT * FROM mensagens_contato", [], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+const colecao = db.collection("contact_messages");
+
+async function listarTodos() {
+  const snapshot = await colecao.get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
-function criar(dados) {
-  return new Promise((resolve, reject) => {
-    const { nome, email, assunto, mensagem } = dados;
+async function criar(dados) {
+  const { name, email, message, assunto = null } = dados;
 
-    db.run(
-      `INSERT INTO mensagens_contato (nome, email, assunto, mensagem)
-       VALUES (?, ?, ?, ?)`,
-      [nome, email, assunto, mensagem],
-      function (err) {
-        if (err) reject(err);
-        else {
-          resolve({
-            id: this.lastID,
-            nome,
-            email,
-            assunto,
-            mensagem,
-          });
-        }
-      }
-    );
-  });
+  const novaMensagem = { name, email, message, assunto, created_at: new Date() };
+
+  const ref = await colecao.add(novaMensagem);
+  return { id: ref.id, ...novaMensagem };
 }
 
 export default {

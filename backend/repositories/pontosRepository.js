@@ -1,29 +1,27 @@
-import db from "../config/database.js";
+import { db } from "../config/firebaseAdmin.js";
 
-function listarTodos() {
-  return new Promise((resolve, reject) => {
-    db.all("SELECT * FROM pontos_coleta", [], (erro, rows) => {
-      if (erro) reject(erro);
-      else resolve(rows);
-    });
-  });
+const colecao = db.collection("pontos_coleta");
+
+async function listarTodos() {
+  const snapshot = await colecao.get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
-function criar(ponto) {
-  const { nome, endereco, cidade, latitude, longitude, horario, telefone } = ponto;
+async function criar(ponto) {
+  const {
+    nome,
+    endereco,
+    cidade = null,
+    latitude = null,
+    longitude = null,
+    horario = null,
+    telefone = null,
+  } = ponto;
 
-  return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO pontos_coleta 
-      (nome, endereco, cidade, latitude, longitude, horario, telefone)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [nome, endereco, cidade, latitude, longitude, horario, telefone],
-      function (erro) {
-        if (erro) reject(erro);
-        else resolve({ id: this.lastID, ...ponto });
-      }
-    );
-  });
+  const novoPonto = { nome, endereco, cidade, latitude, longitude, horario, telefone };
+
+  const ref = await colecao.add(novoPonto);
+  return { id: ref.id, ...novoPonto };
 }
 
 export default {

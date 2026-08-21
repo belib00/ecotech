@@ -1,28 +1,25 @@
-import db from "../config/database.js";
+import { db } from "../config/firebaseAdmin.js";
 
-function listarTodos() {
-  return new Promise((resolve, reject) => {
-    db.all("SELECT * FROM descartes", [], (erro, rows) => {
-      if (erro) reject(erro);
-      else resolve(rows);
-    });
-  });
+const colecao = db.collection("descartes");
+
+async function listarTodos() {
+  const snapshot = await colecao.get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
-function criar(descarte) {
-  const { usuario_id, ponto_id, produto_id, status } = descarte;
+async function criar(descarte) {
+  const { usuario_id = null, ponto_id = null, produto_id = null, status } = descarte;
 
-  return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO descartes (usuario_id, ponto_id, produto_id, status)
-       VALUES (?, ?, ?, ?)`,
-      [usuario_id, ponto_id, produto_id, status || "Pendente"],
-      function (erro) {
-        if (erro) reject(erro);
-        else resolve({ id: this.lastID, ...descarte });
-      }
-    );
-  });
+  const novoDescarte = {
+    usuario_id,
+    ponto_id,
+    produto_id,
+    status: status || "Pendente",
+    data: new Date(),
+  };
+
+  const ref = await colecao.add(novoDescarte);
+  return { id: ref.id, ...novoDescarte };
 }
 
 export default {

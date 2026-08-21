@@ -1,4 +1,3 @@
-import bcrypt from "bcryptjs";
 import usuariosRepository from "../repositories/usuariosRepository.js";
 
 async function listarTodos() {
@@ -22,12 +21,10 @@ async function criar(dados) {
     throw new Error("E-mail já cadastrado.");
   }
 
-  const senhaHash = await bcrypt.hash(senha, 10);
-
   return await usuariosRepository.criar({
     nome,
     email,
-    senha: senhaHash,
+    senha,
     telefone,
     cidade,
     foto,

@@ -1,72 +1,68 @@
-import db from "../config/database.js";
+import { db, auth } from "../config/firebaseAdmin.js";
 
-function listarTodos() {
-  return new Promise((resolve, reject) => {
-    db.all("SELECT id, nome, email, telefone, cidade, foto, tipo, status, created_at FROM usuarios", [], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+const colecao = db.collection("usuarios");
+
+async function listarTodos() {
+  const snapshot = await colecao.get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
-function buscarPorId(id) {
-  return new Promise((resolve, reject) => {
-    db.get("SELECT id, nome, email, telefone, cidade, foto, tipo, status, created_at FROM usuarios WHERE id = ?", [id], (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
+async function buscarPorId(id) {
+  const doc = await colecao.doc(id).get();
+  return doc.exists ? { id: doc.id, ...doc.data() } : null;
 }
 
-function buscarPorEmail(email) {
-  return new Promise((resolve, reject) => {
-    db.get("SELECT * FROM usuarios WHERE email = ?", [email], (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
+async function buscarPorEmail(email) {
+  try {
+    return await auth.getUserByEmail(email);
+  } catch (err) {
+    if (err.code === "auth/user-not-found") return null;
+    throw err;
+  }
 }
 
-function criar(usuario) {
-  const { nome, email, senha, telefone, cidade, foto, tipo, status } = usuario;
+async function criar(usuario) {
+  const { nome, email, senha, telefone, cidade, foto } = usuario;
 
-  return new Promise((resolve, reject) => {
-    db.run(
-      `INSERT INTO usuarios (nome, email, senha, telefone, cidade, foto, tipo, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [nome, email, senha, telefone, cidade, foto, tipo || "usuario", status || "ativo"],
-      function (err) {
-        if (err) reject(err);
-        else resolve({ id: this.lastID, ...usuario });
-      }
-    );
+  const userRecord = await auth.createUser({
+    email,
+    password: senha,
+    displayName: nome,
   });
+
+  const perfil = {
+    nome,
+    email,
+    telefone: telefone ?? null,
+    cidade: cidade ?? null,
+    foto: foto ?? null,
+    tipo: "usuario",
+    status: "ativo",
+    created_at: new Date(),
+  };
+
+  await colecao.doc(userRecord.uid).set(perfil);
+
+  return { id: userRecord.uid, ...perfil };
 }
 
-function atualizar(id, usuario) {
+async function atualizar(id, usuario) {
   const { nome, telefone, cidade, foto, tipo, status } = usuario;
+  const campos = { nome, telefone, cidade, foto, tipo, status };
+  const camposDefinidos = Object.fromEntries(
+    Object.entries(campos).filter(([, valor]) => valor !== undefined)
+  );
 
-  return new Promise((resolve, reject) => {
-    db.run(
-      `UPDATE usuarios
-       SET nome = ?, telefone = ?, cidade = ?, foto = ?, tipo = ?, status = ?
-       WHERE id = ?`,
-      [nome, telefone, cidade, foto, tipo, status, id],
-      function (err) {
-        if (err) reject(err);
-        else resolve({ id, ...usuario });
-      }
-    );
-  });
+  await colecao.doc(id).update(camposDefinidos);
+
+  const doc = await colecao.doc(id).get();
+  return { id: doc.id, ...doc.data() };
 }
 
-function remover(id) {
-  return new Promise((resolve, reject) => {
-    db.run("DELETE FROM usuarios WHERE id = ?", [id], function (err) {
-      if (err) reject(err);
-      else resolve({ removido: this.changes > 0 });
-    });
-  });
+async function remover(id) {
+  await auth.deleteUser(id).catch(() => {});
+  await colecao.doc(id).delete();
+  return { removido: true };
 }
 
 export default {

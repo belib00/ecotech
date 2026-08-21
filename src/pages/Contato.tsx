@@ -1,7 +1,8 @@
 import { useState, FormEvent } from "react";
 import { toast } from "sonner";
 import { Mail } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/firebase/client";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const Contato = () => {
   const [loading, setLoading] = useState(false);
@@ -20,18 +21,20 @@ const Contato = () => {
     }
 
     setLoading(true);
-    const { error } = await supabase
-      .from("contact_messages")
-      .insert({ name, email, message });
-    setLoading(false);
-
-    if (error) {
+    try {
+      await addDoc(collection(db, "contact_messages"), {
+        name,
+        email,
+        message,
+        created_at: serverTimestamp(),
+      });
+      toast.success("Mensagem enviada com sucesso! Entraremos em contato em breve.");
+      form.reset();
+    } catch {
       toast.error("Não foi possível enviar a mensagem. Tente novamente.");
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    toast.success("Mensagem enviada com sucesso! Entraremos em contato em breve.");
-    form.reset();
   };
 
   const inputCls =

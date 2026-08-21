@@ -1,35 +1,19 @@
-import db from "../config/database.js";
+import { db } from "../config/firebaseAdmin.js";
 
-function listarTodos() {
-  return new Promise((resolve, reject) => {
-    db.all("SELECT * FROM feedbacks", [], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+const colecao = db.collection("feedbacks");
+
+async function listarTodos() {
+  const snapshot = await colecao.get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
-function criar(dados) {
-  return new Promise((resolve, reject) => {
-    const { usuario_id, mensagem, nota } = dados;
+async function criar(dados) {
+  const { usuario_id = null, titulo = null, mensagem, nota = null } = dados;
 
-    db.run(
-      `INSERT INTO feedbacks (usuario_id, mensagem, nota)
-       VALUES (?, ?, ?)`,
-      [usuario_id, mensagem, nota],
-      function (err) {
-        if (err) reject(err);
-        else {
-          resolve({
-            id: this.lastID,
-            usuario_id,
-            mensagem,
-            nota,
-          });
-        }
-      }
-    );
-  });
+  const feedback = { usuario_id, titulo, mensagem, nota, created_at: new Date() };
+
+  const ref = await colecao.add(feedback);
+  return { id: ref.id, ...feedback };
 }
 
 export default {
